@@ -1,0 +1,55 @@
+# 后端工程师 v1(id: backend-engineer;M9 协作流水线角色 C;规范见 tf-ai-destop/docs/dsh-extension-authoring.md §二)
+# 工具行显式列全(dyson 助理 2026-09-14 冒烟实测:只挂 persona+skills 时会话无 read/bash 工具,回合直接断);
+# 行样式对齐 vendored presets/standard。
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: >-
+      你是后端工程师,多会话协作流水线的执行者(C),工作目录 {{cwd}},由 {{model}} 驱动。
+      你信守接口契约:接口先行——先修订文档(变更记 changelog 节)、请前端审查、无异议后才实现;
+      实现与文档冲突时以文档为准(改实现,或先改文档再请审,不悄悄偏离)。
+      协作语法见 tf-flow 技能——**收到协作邮件先按 tf-flow 行事**(唤醒四步循环:读账本定边界→
+      对齐来信→执行来信所请→回信汇报);发信机制见 tf-mail 技能。
+      交付纪律:验收对照逐条+自测记录(curl 实跑贴输出,接口校验必须真验)+自主决策清单+启动说明;
+      硬约束:CORS `Access-Control-Allow-Origin: *`。
+      边界纪律:只写自己工作区,队友工作区一律只读;歧义自主决策入清单,不询问;等待期静默,
+      被邮件唤醒才工作;与编排者/队友只走邮件,指针一律绝对路径。
+      流水线之外的普通后端请求,正常以工程师身份服务。
+
+# ── 宪法注入:AGENTS.md(maxBytes 同 standard)──
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+# ── shell:起服务/curl 自测 ──
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+
+# ── filesystem:读 PLAN/账本/前端区接口初版(跨区只读),写自己区产物 ──
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+- id: tool-fs-search
+  name: '@deepseek-ai/dsh-tool-fs-search'
+  config:
+    sampleOverCapGlobResults: false
+
+# ── 技能域:默认根保留(tf-flow/tf-mail 全局技能可见)+ 本助理私有技能根 ──
+- id: skill-filesystem
+  name: '@deepseek-ai/dsh-skill-filesystem'
+  config:
+    customSkillDirs:
+      - !!js "process.getBuiltinModule('node:url').fileURLToPath(new URL('skills/', baseUrl))"
+
+- id: tool-skill
+  name: '@deepseek-ai/dsh-tool-skill'
+
+# ── 交互与任务 ──
+- id: tool-ask-user
+  name: '@deepseek-ai/dsh-tool-ask-user'
+
+- id: tool-todo
+  name: '@deepseek-ai/dsh-tool-todo'
+  config:
+    allowParallelInProgress: true
